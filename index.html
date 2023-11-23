@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CAPTCHA Məşqi</title>
+    <style>
+      body {
+        font-family: "Arial", sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+      }
+
+      .captcha-container {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+
+      .captcha-row {
+        display: flex;
+        justify-content: center;
+      }
+
+      .captcha-digit {
+        font-size: 16px;
+        padding: 8px;
+        margin: 0 5px; /* Sağa ve sola 5px boşluk */
+      }
+
+      .captcha-dropdown {
+        font-size: 16px;
+        padding: 8px;
+        margin: 0 5px; /* Sağa ve sola 5px boşluk */
+      }
+      #start-btn {
+        font-size: 16px;
+        padding: 10px;
+        cursor: pointer;
+        margin-top: 10px;
+      }
+      #check-btn {
+        font-size: 16px;
+        padding: 10px;
+        cursor: pointer;
+        margin-top: px;
+        top: 0px;
+      }
+
+      #result-message {
+        margin-top: 120px;
+        font-weight: bold;
+      }
+      /* Select */
+      #timer {
+        margin-top: 10px;
+      }
+
+      #records {
+        margin-top: 20px;
+      }
+
+      #records table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+      }
+
+      #records table,
+      #records th,
+      #records td {
+        border: 1px solid #ddd;
+      }
+
+      #records th,
+      #records td {
+        padding: 8px;
+        text-align: center;
+      }
+      #dropdown-container select {
+        position: relative;
+        top: 107px;
+        left: -46px;
+      }
+
+      /* Check */
+      #check-btn {
+        position: relative;
+        top: 10px;
+        left: -10px;
+      }
+
+      /* Captcha digit */
+      #dropdown-container .captcha-digit {
+        position: relative;
+        top: 50px;
+      }
+    </style>
+    <script>
+      var captchaArray = [];
+      var startTime;
+      var timerInterval;
+      var correctTimes = [];
+      var isCaptchaInProgress = false;
+
+      function generateCaptcha() {
+        captchaArray = [];
+        while (captchaArray.length < 6) {
+          var randomDigit = Math.floor(Math.random() * 10);
+          if (captchaArray.indexOf(randomDigit) === -1) {
+            captchaArray.push(randomDigit);
+          }
+        }
+        return captchaArray;
+      }
+
+      function loadCaptcha() {
+        generateCaptcha();
+
+        var captchaContainer = document.getElementById("captcha-container");
+        captchaContainer.innerHTML = "Captcha: ";
+
+        var dropdownContainer = document.getElementById("dropdown-container");
+        dropdownContainer.innerHTML = "";
+
+        var row = document.createElement("div");
+        row.classList.add("captcha-row");
+
+        for (var i = 0; i < captchaArray.length; i++) {
+          var captchaDigit = document.createElement("div");
+          captchaDigit.classList.add("captcha-digit");
+          captchaDigit.innerHTML = captchaArray[i];
+
+          var dropdown = document.createElement("select");
+          dropdown.classList.add("captcha-dropdown");
+          dropdown.onkeydown = function (event) {
+            event.preventDefault();
+          };
+
+          for (var j = 0; j < 10; j++) {
+            var option = document.createElement("option");
+            option.value = j;
+            option.text = j;
+            dropdown.add(option);
+          }
+
+          row.appendChild(captchaDigit);
+          row.appendChild(dropdown);
+        }
+
+        dropdownContainer.appendChild(row);
+
+        var resultMessage = document.getElementById("result-message");
+        resultMessage.innerHTML = ""; // Sonuç mesajını temizle
+
+        var startBtn = document.getElementById("start-btn");
+        startBtn.style.display = "none";
+
+        var checkBtn = document.getElementById("check-btn");
+        checkBtn.style.display = "block";
+
+        var timer = document.getElementById("timer");
+        timer.innerHTML = ""; // Timer'ı temizle
+
+        startTime = Date.now();
+        timerInterval = setInterval(updateTimer, 1000);
+        isCaptchaInProgress = true;
+      }
+
+      function startCaptcha() {
+        if (!isCaptchaInProgress) {
+          var startBtn = document.getElementById("start-btn");
+          startBtn.style.display = "none";
+
+          loadCaptcha();
+        }
+      }
+
+      function checkCaptcha() {
+        if (isCaptchaInProgress) {
+          var userSelection = [];
+
+          var dropdowns = document.getElementsByClassName("captcha-dropdown");
+          for (var i = 0; i < dropdowns.length; i++) {
+            userSelection.push(parseInt(dropdowns[i].value));
+          }
+
+          var isCaptchaCorrect = JSON.stringify(captchaArray) === JSON.stringify(userSelection);
+          var resultMessage = document.getElementById("result-message");
+
+          if (isCaptchaCorrect) {
+            clearInterval(timerInterval);
+
+            var elapsedTime = Math.floor((Date.now() - startTime) / 1000);
+            resultMessage.innerHTML = "Captcha düzdür! 🎉 Keçən vaxt: " + elapsedTime + " saniyə";
+
+            correctTimes.push(elapsedTime);
+
+            var recordsTable = document.getElementById("records-table");
+            var newRow = recordsTable.insertRow(-1);
+            var cell1 = newRow.insertCell(0);
+            var cell2 = newRow.insertCell(1);
+
+            cell1.innerHTML = correctTimes.length;
+            cell2.innerHTML = elapsedTime;
+
+            var timer = document.getElementById("timer");
+            timer.innerHTML = ""; // Timer'ı temizle
+
+            var checkBtn = document.getElementById("check-btn");
+            checkBtn.style.display = "none";
+
+            var startBtn = document.getElementById("start-btn");
+            startBtn.style.display = "block";
+
+            isCaptchaInProgress = false;
+          } else {
+            resultMessage.innerHTML = "Captcha səhvdir! 🚫";
+          }
+        }
+      }
+
+      function updateTimer() {
+        var timer = document.getElementById("timer");
+        var elapsedTime = Math.floor((Date.now() - startTime) / 1000);
+        timer.innerHTML = "Geçen Süre: " + elapsedTime + " saniye";
+      }
+    </script>
+  </head>
+  <body>
+    <button id="start-btn" onclick="startCaptcha()">Başla</button>
+    <div class="captcha-container" id="captcha-container"></div>
+    <div id="dropdown-container"></div>
+    <div id="result-message"></div>
+    <div id="timer"></div>
+    <button id="check-btn" style="display: none" onclick="checkCaptcha()">Check</button>
+    <div id="records">
+      <h2>Düzgün girişlər</h2>
+      <table id="records-table">
+        <thead>
+          <tr>
+            <th>Sıra</th>
+            <th>Keçən vaxt</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Buraya doğru girişlerin zamanları eklenecek -->
+        </tbody>
+      </table>
+    </div>
+  </body>
+</html>
