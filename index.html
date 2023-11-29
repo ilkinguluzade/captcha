@@ -116,6 +116,65 @@
       }
 
       function loadCaptcha() {
+    generateCaptcha();
+
+    var captchaContainer = document.getElementById("captcha-container");
+    captchaContainer.innerHTML = "Captcha: ";
+
+    var dropdownContainer = document.getElementById("dropdown-container");
+    dropdownContainer.innerHTML = "";
+
+    var row = document.createElement("div");
+    row.classList.add("captcha-row");
+
+    for (var i = 0; i < captchaArray.length; i++) {
+        var captchaDigit = document.createElement("div");
+        captchaDigit.classList.add("captcha-digit");
+        captchaDigit.innerHTML = captchaArray[i];
+
+        var dropdown = document.createElement("select");
+        dropdown.classList.add("captcha-dropdown");
+        dropdown.onkeydown = function (event) {
+            event.preventDefault();
+        };
+
+        // 1-9 arasındaki sayıları ekleyin, sıralama 1-9 olacak şekilde
+        for (var j = 1; j <= 9; j++) {
+            var option = document.createElement("option");
+            option.value = j;
+            option.text = j;
+            dropdown.add(option);
+        }
+
+        // Son olarak, 0'ı ekleyin
+        var zeroOption = document.createElement("option");
+        zeroOption.value = 0;
+        zeroOption.text = 0;
+        dropdown.add(zeroOption);
+
+        row.appendChild(captchaDigit);
+        row.appendChild(dropdown);
+    }
+
+    dropdownContainer.appendChild(row);
+
+    var resultMessage = document.getElementById("result-message");
+    resultMessage.innerHTML = ""; // Sonuç mesajını temizle
+
+    var startBtn = document.getElementById("start-btn");
+    startBtn.style.display = "none";
+
+    var checkBtn = document.getElementById("check-btn");
+    checkBtn.style.display = "block";
+
+    var timer = document.getElementById("timer");
+    timer.innerHTML = ""; // Timer'ı temizle
+
+    startTime = Date.now();
+    timerInterval = setInterval(updateTimer, 1000);
+    isCaptchaInProgress = true;
+}
+
         generateCaptcha();
 
         var captchaContainer = document.getElementById("captcha-container");
@@ -166,7 +225,7 @@
         startTime = Date.now();
         timerInterval = setInterval(updateTimer, 1000);
         isCaptchaInProgress = true;
-      }
+      
 
       function startCaptcha() {
         if (!isCaptchaInProgress) {
